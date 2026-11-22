@@ -1,0 +1,83 @@
+<div class="container py-4">
+  <div class="fh-card p-0 overflow-hidden" style="height: calc(100vh - 160px); min-height: 520px;">
+    <div class="row g-0 h-100">
+      <!-- Left Column: Conversations List -->
+      <div class="col-md-4 col-lg-3 border-end h-100 flex-column bg-white" ng-class="{'d-none d-md-flex': activeContact, 'd-flex': !activeContact}">
+        <div class="p-3 border-bottom">
+          <h5 class="fw-bold mb-0"><i class="bi bi-chat-dots-fill text-primary me-1"></i> Messages</h5>
+        </div>
+
+        <div class="overflow-y-auto flex-grow-1">
+          <div class="text-center py-4 text-muted small" ng-if="conversations.length === 0">
+            No conversation threads yet. Message a freelancer or client to get started.
+          </div>
+
+          <div class="list-group list-group-flush" ng-if="conversations.length > 0">
+            <a href="javascript:void(0)" class="list-group-item list-group-item-action p-3 border-bottom" ng-repeat="c in conversations" ng-class="{'active bg-light text-dark': activeContact._id === c.contact._id}" ng-click="selectContact(c.contact)">
+              <div class="d-flex align-items-center gap-2">
+                <img ng-src="{{c.contact.avatar || '/assets/images/default-avatar.png'}}" class="fh-avatar-sm" alt="">
+                <div class="flex-grow-1 text-truncate">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <strong class="text-dark small text-truncate">{{c.contact.name}}</strong>
+                    <span class="badge bg-primary rounded-pill" ng-if="c.unreadCount > 0">{{c.unreadCount}}</span>
+                  </div>
+                  <small class="text-muted text-truncate d-block">{{c.lastMessage.text || 'Attachment sent'}}</small>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Active Conversation Stream -->
+      <div class="col-md-8 col-lg-9 h-100 flex-column bg-light" ng-class="{'d-none d-md-flex': !activeContact, 'd-flex': activeContact}">
+        <!-- Active Contact Header -->
+        <div class="p-3 bg-white border-bottom d-flex justify-content-between align-items-center" ng-if="activeContact">
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-light border d-md-none" ng-click="selectContact(null)" title="Back to conversations">
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            <img ng-src="{{activeContact.avatar || '/assets/images/default-avatar.png'}}" class="fh-avatar-sm" alt="">
+            <div>
+              <strong class="text-dark d-block">{{activeContact.name}}</strong>
+              <small class="text-muted text-uppercase" style="font-size: 11px;">{{activeContact.role}}</small>
+            </div>
+          </div>
+          <a href="#!/freelancers/{{activeContact._id}}" class="btn btn-sm btn-outline-fh" ng-if="activeContact.role === 'freelancer'">View Profile</a>
+        </div>
+
+        <!-- Messages Stream -->
+        <div class="flex-grow-1 p-3 overflow-y-auto d-flex flex-column gap-2" id="msgStream">
+          <div class="text-center text-muted small py-5" ng-if="!activeContact">
+            Select a conversation on the left to start messaging.
+          </div>
+          <div class="text-center text-muted small py-5" ng-if="activeContact && messages.length === 0">
+            No previous messages. Say hello!
+          </div>
+
+          <div ng-repeat="msg in messages" class="chat-bubble" ng-class="{'chat-bubble-sent': msg.sender._id === currentUser._id, 'chat-bubble-received': msg.sender._id !== currentUser._id}">
+            <div>{{msg.text}}</div>
+            <div ng-if="msg.attachmentUrl" class="mt-2 pt-1 border-top border-white-50">
+              <a ng-href="{{msg.attachmentUrl}}" target="_blank" class="text-decoration-underline text-white small">
+                <i class="bi bi-paperclip"></i> {{msg.attachmentName || 'Attachment'}}
+              </a>
+            </div>
+            <div class="text-end" style="font-size: 10px; opacity: 0.75;">{{msg.createdAt | date:'shortTime'}}</div>
+          </div>
+        </div>
+
+        <!-- Message Input Bar -->
+        <div class="p-3 bg-white border-top" ng-if="activeContact">
+          <form ng-submit="sendMessage()" class="d-flex gap-2">
+            <input type="file" id="msgAttachment" class="d-none">
+            <button type="button" class="btn btn-light border" onclick="document.getElementById('msgAttachment').click()" title="Attach file">
+              <i class="bi bi-paperclip"></i>
+            </button>
+            <input type="text" class="form-control" placeholder="Write a message..." ng-model="chatInput">
+            <button type="submit" class="btn btn-primary-fh px-4"><i class="bi bi-send-fill"></i></button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

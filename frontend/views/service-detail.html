@@ -1,0 +1,121 @@
+<div class="container py-4" ng-if="!isLoading && service">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="#!/services">Services</a></li>
+      <li class="breadcrumb-item"><a href="#!/services?category={{service.category}}">{{service.category}}</a></li>
+      <li class="breadcrumb-item active text-truncate" style="max-width: 300px;">{{service.title}}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <!-- Left Column: Media, Details, Reviews -->
+    <div class="col-lg-8">
+      <h2 class="fw-bold mb-3">{{service.title}}</h2>
+
+      <!-- Seller Header -->
+      <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+        <img ng-src="{{service.freelancer.avatar || '/assets/images/default-avatar.png'}}" class="fh-avatar" alt="">
+        <div>
+          <div class="d-flex align-items-center gap-2">
+            <a href="#!/freelancers/{{service.freelancer._id}}" class="fw-bold text-dark fs-6">{{service.freelancer.name}}</a>
+            <span class="badge-verified" ng-if="service.freelancer.isVerified"><i class="bi bi-patch-check-fill"></i> Verified Pro</span>
+          </div>
+          <div class="d-flex align-items-center gap-2 text-muted small mt-1">
+            <span class="text-warning fw-bold"><i class="bi bi-star-fill"></i> {{service.rating}}</span>
+            <span>({{service.numReviews}} reviews)</span>
+            <span>•</span>
+            <i class="bi bi-geo-alt"></i> {{service.freelancer.location || 'India'}}
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Showcase Banner -->
+      <div class="fh-card mb-4 overflow-hidden">
+        <img ng-src="{{service.images[0] || '/assets/images/service-default.jpg'}}" alt="{{service.title}}" class="w-100" style="max-height: 420px; object-fit: cover;">
+      </div>
+
+      <!-- Service Description -->
+      <div class="fh-card p-4 mb-4">
+        <h5 class="fw-bold mb-3 border-bottom pb-2">About This Service</h5>
+        <div class="text-secondary lh-lg mb-4" style="white-space: pre-line;">{{service.description}}</div>
+
+        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-info-circle text-primary me-1"></i> Required Information from Client:</h6>
+        <p class="text-muted small bg-light p-3 rounded-3 border">{{service.requiredInfo}}</p>
+      </div>
+
+      <!-- Reviews Section -->
+      <div class="fh-card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+          <h5 class="fw-bold mb-0">Client Reviews ({{reviews.length}})</h5>
+          <span class="text-warning fw-bold"><i class="bi bi-star-fill"></i> {{service.rating}} / 5.0</span>
+        </div>
+
+        <div class="text-center py-4 text-muted small" ng-if="reviews.length === 0">
+          No reviews yet. Be the first to order and review this service!
+        </div>
+
+        <div class="d-flex flex-column gap-3" ng-if="reviews.length > 0">
+          <div class="border-bottom pb-3" ng-repeat="r in reviews">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <div class="d-flex align-items-center gap-2">
+                <img ng-src="{{r.reviewer.avatar || '/assets/images/default-avatar.png'}}" class="fh-avatar-sm" alt="">
+                <strong class="text-dark small">{{r.reviewer.name}}</strong>
+              </div>
+              <span class="text-warning small">
+                <i class="bi bi-star-fill" ng-repeat="star in [1,2,3,4,5] | limitTo: r.rating"></i>
+              </span>
+            </div>
+            <p class="text-muted small mb-0">{{r.comment}}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Package Pricing Tabs & Razorpay Checkout Box -->
+    <div class="col-lg-4">
+      <div class="fh-card sticky-top overflow-hidden" style="top: 90px; z-index: 20;">
+        <!-- Package Selection Tabs -->
+        <div class="btn-group w-100 rounded-0 border-bottom" role="group">
+          <button type="button" class="btn btn-light py-3 fw-bold rounded-0" ng-class="{'btn-primary text-white': selectedPackageType === 'basic'}" ng-click="setPackage('basic')">
+            Basic
+          </button>
+          <button type="button" class="btn btn-light py-3 fw-bold rounded-0" ng-class="{'btn-primary text-white': selectedPackageType === 'standard'}" ng-click="setPackage('standard')">
+            Standard
+          </button>
+          <button type="button" class="btn btn-light py-3 fw-bold rounded-0" ng-class="{'btn-primary text-white': selectedPackageType === 'premium'}" ng-click="setPackage('premium')">
+            Premium
+          </button>
+        </div>
+
+        <div class="p-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="fw-bold mb-0 text-dark">{{getSelectedPackage().name}}</h5>
+            <h3 class="fw-bold text-primary mb-0">{{formatCurrency(getSelectedPackage().price)}}</h3>
+          </div>
+          <p class="text-muted small mb-3">{{getSelectedPackage().description}}</p>
+
+          <div class="d-flex align-items-center gap-4 text-muted small fw-semibold mb-3 py-2 border-top border-bottom">
+            <span><i class="bi bi-clock me-1"></i> {{getSelectedPackage().deliveryDays}} Days Delivery</span>
+            <span><i class="bi bi-arrow-repeat me-1"></i> {{getSelectedPackage().revisions}} Revisions</span>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label small fw-semibold text-muted">Project Requirements / Notes:</label>
+            <textarea class="form-control form-control-sm" rows="3" ng-model="orderRequirements" placeholder="Share your specific assets, links, and design notes..."></textarea>
+          </div>
+
+          <button class="btn btn-primary-fh w-100 py-3 fw-bold" ng-click="proceedToCheckout()" ng-disabled="isOrdering">
+            <span ng-if="!isOrdering"><i class="bi bi-shield-check me-1"></i> Continue ({{formatCurrency(getSelectedPackage().price)}})</span>
+            <span ng-if="isOrdering"><span class="spinner-border spinner-border-sm me-2"></span>Securing Escrow...</span>
+          </button>
+
+          <div class="text-center mt-3">
+            <small class="text-muted d-block"><i class="bi bi-lock-fill text-success me-1"></i> 100% Protected Payment Hold</small>
+            <small class="text-muted" style="font-size: 11px;">Funds held in simulated escrow until you approve final delivery.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

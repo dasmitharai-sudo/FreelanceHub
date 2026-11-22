@@ -1,0 +1,115 @@
+<div class="container py-5 my-auto">
+  <div class="row justify-content-center">
+    <div class="col-md-9 col-lg-8">
+      <div class="fh-card p-4 p-sm-5">
+        <div class="text-center mb-4">
+          <img src="/assets/images/logo.svg" alt="FreelanceHub" style="height: 48px;" class="mb-2">
+          <h3 class="fw-bold mb-1">Create Your Account</h3>
+          <p class="text-muted small">Join FreelanceHub as a Client or Freelancer</p>
+
+          <!-- Role Switcher Tabs -->
+          <div class="btn-group w-100 mt-3 p-1 bg-light rounded-pill border" role="group">
+            <button type="button" class="btn rounded-pill fw-semibold py-2" ng-class="{'btn-primary-fh': activeTab === 'client', 'btn-light text-muted': activeTab !== 'client'}" ng-click="activeTab = 'client'">
+              <i class="bi bi-briefcase me-1"></i> I am a Client (Hiring)
+            </button>
+            <button type="button" class="btn rounded-pill fw-semibold py-2" ng-class="{'btn-primary-fh': activeTab === 'freelancer', 'btn-light text-muted': activeTab !== 'freelancer'}" ng-click="activeTab = 'freelancer'">
+              <i class="bi bi-person-workspace me-1"></i> I am a Freelancer (Offering Work)
+            </button>
+          </div>
+        </div>
+
+        <div class="alert alert-danger py-2 small" ng-if="errorMessage">
+          <i class="bi bi-exclamation-triangle-fill me-1"></i> {{errorMessage}}
+        </div>
+
+        <form ng-submit="doRegister()">
+          <!-- Common Fields -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-muted">Full Name *</label>
+              <input type="text" class="form-control" ng-model="registerData.name" placeholder="John Doe" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-muted">Email Address *</label>
+              <input type="email" class="form-control" ng-model="registerData.email" placeholder="john@example.com" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-muted">Phone Number *</label>
+              <input type="tel" class="form-control" ng-model="registerData.phone" placeholder="+91 98765 43210" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-muted">Password * (min 6 chars)</label>
+              <input type="password" class="form-control" ng-model="registerData.password" placeholder="••••••••" minlength="6" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-muted">Location / City</label>
+              <input type="text" class="form-control" ng-model="registerData.location" placeholder="e.g. Bangalore, India">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-muted">Profile Picture (Optional)</label>
+              <input type="file" id="registerAvatar" class="form-control" accept="image/*">
+            </div>
+          </div>
+
+          <!-- Client-Specific Fields -->
+          <div ng-if="activeTab === 'client'" class="p-3 bg-light rounded-3 mb-3 border">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-building me-1 text-primary"></i> Company / Organization Details</h6>
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label small fw-semibold text-muted">Company or Organization Name (Optional)</label>
+                <input type="text" class="form-control" ng-model="registerData.companyName" placeholder="e.g. Acme Studio / Personal Client">
+              </div>
+            </div>
+          </div>
+
+          <!-- Freelancer-Specific Fields (Multi-category, skills, hourly rate, title) -->
+          <div ng-if="activeTab === 'freelancer'" class="p-3 bg-light rounded-3 mb-3 border">
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-tools me-1 text-primary"></i> Professional Freelancer Details</h6>
+            <p class="text-muted small mb-3">You can select multiple categories to offer diverse services under one account.</p>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-8">
+                <label class="form-label small fw-semibold text-muted">Professional Title *</label>
+                <input type="text" class="form-control" ng-model="registerData.title" placeholder="e.g. Senior Full-Stack Developer & UI Architect" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">Hourly Rate (₹/hr) *</label>
+                <input type="number" class="form-control" ng-model="registerData.hourlyRate" min="100" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-muted">Years of Experience</label>
+                <input type="number" class="form-control" ng-model="registerData.experience" min="0" placeholder="e.g. 4">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold text-muted">Key Skills (Comma separated) *</label>
+                <input type="text" class="form-control" ng-model="registerData.skills" placeholder="e.g. AngularJS, Node.js, UI/UX, SEO" required>
+              </div>
+            </div>
+
+            <!-- Multi-Category Selection Grid -->
+            <label class="form-label small fw-semibold text-dark d-block mb-2">
+              Select Professional Categories * (Multi-Skill selection supported):
+            </label>
+            <div class="d-flex flex-wrap gap-2" style="max-height: 220px; overflow-y: auto;">
+              <button type="button" class="btn btn-sm" ng-repeat="cat in categories" ng-class="{'btn-primary': isCategorySelected(cat.name), 'btn-outline-secondary': !isCategorySelected(cat.name)}" ng-click="toggleCategory(cat.name)">
+                <i class="bi {{cat.icon || 'bi-tag'}} me-1"></i> {{cat.name}}
+                <i class="bi bi-check-circle-fill ms-1" ng-if="isCategorySelected(cat.name)"></i>
+              </button>
+            </div>
+            <small class="text-muted d-block mt-2">Selected ({{registerData.categories.length}}): {{registerData.categories.join(', ') || 'None yet'}}</small>
+          </div>
+
+          <button type="submit" class="btn btn-primary-fh w-100 py-2 mt-3" ng-disabled="isSubmitting">
+            <span ng-if="!isSubmitting">Create My {{activeTab === 'freelancer' ? 'Freelancer' : 'Client'}} Account</span>
+            <span ng-if="isSubmitting"><span class="spinner-border spinner-border-sm me-2"></span>Creating Account...</span>
+          </button>
+        </form>
+
+        <div class="text-center mt-4 pt-3 border-top">
+          <span class="text-muted small">Already have an account? </span>
+          <a href="#!/login" class="small fw-bold text-primary">Log In</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

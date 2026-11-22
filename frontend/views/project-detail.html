@@ -1,0 +1,172 @@
+<div class="container py-4" ng-if="!isLoading && project">
+  <div class="row g-4">
+    <!-- Left Column: Project Details & Proposals -->
+    <div class="col-lg-8">
+      <div class="fh-card p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+          <div>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-2">{{project.category}}</span>
+            <span class="badge" ng-class="{
+              'bg-success': project.status === 'Completed',
+              'bg-warning text-dark': project.status === 'In Progress' || project.status === 'Submitted',
+              'bg-info text-dark': project.status === 'Pending'
+            }">{{project.status}}</span>
+            <h3 class="fw-bold mt-2 mb-1">{{project.title}}</h3>
+            <span class="text-muted small">Posted {{project.createdAt | date:'mediumDate'}} by <strong>{{project.client.name}}</strong></span>
+          </div>
+          <div class="text-end">
+            <span class="text-muted small d-block">{{project.paymentType === 'fixed' ? 'Fixed Price Budget' : 'Hourly Rate'}}</span>
+            <h2 class="fw-bold text-primary mb-0">{{formatCurrency(project.budget)}}</h2>
+          </div>
+        </div>
+
+        <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Project Description</h5>
+        <p class="text-secondary lh-lg mb-4" style="white-space: pre-line;">{{project.description}}</p>
+
+        <h6 class="fw-bold text-dark mb-2">Required Skills:</h6>
+        <div class="mb-4">
+          <span class="skill-tag" ng-repeat="sk in project.skills">{{sk}}</span>
+        </div>
+
+        <!-- Milestones list if present -->
+        <div ng-if="project.milestones && project.milestones.length > 0" class="mb-4">
+          <h6 class="fw-bold text-dark mb-2">Project Milestones:</h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th>Milestone</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="m in project.milestones">
+                  <td>{{m.title}}</td>
+                  <td class="fw-bold">{{formatCurrency(m.amount)}}</td>
+                  <td><span class="badge bg-light text-dark border">{{m.status}}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Project Status / Workspace Link if hired -->
+        <div class="alert alert-info d-flex justify-content-between align-items-center" ng-if="project.status !== 'Pending'">
+          <div>
+            <strong><i class="bi bi-info-circle-fill me-1"></i> Active Project Workspace:</strong>
+            <span class="d-block small">Freelancer has been hired. Work and milestones are managed in the Workspace.</span>
+          </div>
+          <a href="#!/workspace/{{project._id}}" class="btn btn-primary-fh btn-sm">Enter Workspace</a>
+        </div>
+      </div>
+
+      <!-- Proposal Submission Box (For Freelancers) -->
+      <div class="fh-card p-4 mb-4" ng-if="isLoggedIn && currentUser.role === 'freelancer' && project.status === 'Pending' && !myProposal">
+        <h5 class="fw-bold mb-3 border-bottom pb-2"><i class="bi bi-send-fill text-primary me-1"></i> Submit a Proposal</h5>
+        <form ng-submit="submitProposal()">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-muted">Your Price Bid (₹) *</label>
+              <input type="number" class="form-control" ng-model="proposalInput.bidAmount" min="100" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-muted">Estimated Delivery (Days) *</label>
+              <input type="number" class="form-control" ng-model="proposalInput.deliveryDays" min="1" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold text-muted">Cover Letter / Proposal *</label>
+              <textarea class="form-control" rows="4" ng-model="proposalInput.coverLetter" placeholder="Describe your experience, approach to solving this project, past similar work, and why you are the best fit..." required></textarea>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary-fh px-4" ng-disabled="isSubmitting">
+            <span ng-if="!isSubmitting">Submit Proposal</span>
+            <span ng-if="isSubmitting"><span class="spinner-border spinner-border-sm me-2"></span>Submitting...</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- My Submitted Proposal Notice -->
+      <div class="fh-card p-4 mb-4 border-success-subtle bg-success-subtle text-success" ng-if="myProposal">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="fw-bold mb-1"><i class="bi bi-check-circle-fill me-1"></i> You Have Submitted a Proposal</h6>
+            <p class="small mb-0">Bid: <strong>{{formatCurrency(myProposal.bidAmount)}}</strong> in <strong>{{myProposal.deliveryDays}} days</strong>. Status: <span class="badge bg-success">{{myProposal.status}}</span></p>
+          </div>
+          <button class="btn btn-sm btn-outline-danger" ng-if="myProposal.status === 'pending'" ng-click="withdrawProposal(myProposal._id)">Withdraw Proposal</button>
+        </div>
+      </div>
+
+      <!-- Proposals List (For Client Owner or Admin) -->
+      <div class="fh-card p-4" ng-if="isLoggedIn && (currentUser._id === project.client._id || currentUser.role === 'admin')">
+        <h5 class="fw-bold mb-3 border-bottom pb-2">Received Proposals ({{allProposals.length}})</h5>
+
+        <div class="text-center py-4 text-muted small" ng-if="allProposals.length === 0">
+          No proposals received yet. Freelancers are reviewing your listing.
+        </div>
+
+        <div class="d-flex flex-column gap-3" ng-if="allProposals.length > 0">
+          <div class="p-3 bg-light rounded-3 border" ng-repeat="prop in allProposals">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+              <div class="d-flex align-items-center gap-3">
+                <img ng-src="{{prop.freelancer.avatar || '/assets/images/default-avatar.png'}}" class="fh-avatar-sm" alt="">
+                <div>
+                  <a href="#!/freelancers/{{prop.freelancer._id}}" class="fw-bold text-dark">{{prop.freelancer.name}}</a>
+                  <span class="badge-verified" ng-if="prop.freelancer.isVerified"><i class="bi bi-patch-check-fill"></i></span>
+                  <small class="text-muted d-block">{{prop.freelancer.location || 'India'}}</small>
+                </div>
+              </div>
+              <div class="text-end">
+                <h5 class="fw-bold text-primary mb-0">{{formatCurrency(prop.bidAmount)}}</h5>
+                <small class="text-muted">{{prop.deliveryDays}} Days Delivery</small>
+              </div>
+            </div>
+
+            <p class="text-muted small mb-3 lh-base" style="white-space: pre-line;">{{prop.coverLetter}}</p>
+
+            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+              <span class="badge" ng-class="{
+                'bg-success': prop.status === 'accepted',
+                'bg-secondary': prop.status === 'rejected',
+                'bg-warning text-dark': prop.status === 'pending'
+              }">{{prop.status}}</span>
+
+              <div class="d-flex gap-2" ng-if="project.status === 'Pending' && prop.status === 'pending'">
+                <button class="btn btn-sm btn-outline-danger" ng-click="rejectProposal(prop._id)">Reject</button>
+                <button class="btn btn-sm btn-success" ng-click="acceptProposal(prop._id)">Accept & Hire</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Client Info & Summary -->
+    <div class="col-lg-4">
+      <div class="fh-card p-4 sticky-top" style="top: 90px; z-index: 10;">
+        <h5 class="fw-bold mb-3 border-bottom pb-2">Client Details</h5>
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <img ng-src="{{project.client.avatar || '/assets/images/default-avatar.png'}}" class="fh-avatar" alt="">
+          <div>
+            <h6 class="fw-bold mb-0">{{project.client.name}}</h6>
+            <small class="text-muted d-block"><i class="bi bi-geo-alt"></i> {{project.client.location || 'India'}}</small>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <small class="text-muted d-block">Target Deadline</small>
+          <strong class="text-dark">{{project.deadline | date:'mediumDate'}}</strong>
+        </div>
+
+        <div class="mb-4">
+          <small class="text-muted d-block">Budget Protection</small>
+          <span class="small text-success"><i class="bi bi-shield-check"></i> Escrow Secured</span>
+        </div>
+
+        <a href="#!/workspace/{{project._id}}" class="btn btn-primary-fh w-100 py-2" ng-if="project.status !== 'Pending'">
+          Open Project Workspace
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

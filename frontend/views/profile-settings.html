@@ -1,0 +1,405 @@
+<div class="container py-4 py-md-5">
+  <!-- Page Header -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-gold-light text-navy border border-gold px-3 py-1 rounded-pill small fw-bold">
+          <i class="bi bi-shield-check text-gold me-1"></i> Account Security &amp; Profile
+        </span>
+      </div>
+      <h2 class="fw-bold mb-1 text-navy">Profile &amp; Account Settings</h2>
+      <p class="text-muted small mb-0">Manage your personal identity, avatar image, email preferences, and password.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="#!/client-dashboard" class="btn btn-outline-navy btn-sm" ng-if="currentUser.role === 'client'">
+        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+      </a>
+      <a href="#!/freelancer-dashboard" class="btn btn-outline-navy btn-sm" ng-if="currentUser.role === 'freelancer'">
+        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+      </a>
+      <a href="#!/admin-dashboard" class="btn btn-outline-navy btn-sm" ng-if="currentUser.role === 'admin'">
+        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: Profile Card & Picture Management -->
+    <div class="col-lg-5 col-xl-4">
+      <div class="fh-card p-4 text-center">
+        <!-- Avatar Display & Preview -->
+        <div class="position-relative d-inline-block mx-auto mb-3">
+          <img 
+            ng-src="{{avatarPreview || user.avatar || '/assets/images/default-avatar.png'}}" 
+            alt="Profile Avatar" 
+            class="fh-avatar-lg shadow-sm"
+            style="width: 120px; height: 120px; border-width: 3px;">
+          
+          <span class="badge-verified position-absolute bottom-0 end-0 shadow-sm" ng-if="user.isVerified" title="Verified Member">
+            <i class="bi bi-patch-check-fill"></i>
+          </span>
+        </div>
+
+        <!-- Role Badge -->
+        <div class="mb-3">
+          <span class="badge px-3 py-1 rounded-pill text-uppercase fw-semibold" ng-class="{
+            'bg-primary': user.role === 'client',
+            'bg-success': user.role === 'freelancer',
+            'bg-danger': user.role === 'admin'
+          }">
+            <i class="bi bi-person-fill me-1"></i> {{user.role}}
+          </span>
+          <span class="text-muted small ms-2 d-inline-block">{{user.location || 'India'}}</span>
+        </div>
+
+        <!-- ==========================================
+             FEATURE 1: EDIT NAME (with Edit, Save, Cancel)
+             ========================================== -->
+        <div class="border-top pt-3 mb-4">
+          <!-- Normal Display Mode -->
+          <div ng-if="!isEditingName">
+            <div class="d-flex align-items-center justify-content-center gap-2">
+              <h4 class="fw-bold mb-0 text-navy text-truncate" style="max-width: 200px;">{{user.name}}</h4>
+              <button 
+                type="button" 
+                class="btn btn-sm btn-outline-navy py-1 px-2" 
+                ng-click="startEditName()" 
+                title="Edit Name">
+                <i class="bi bi-pencil me-1"></i> Edit
+              </button>
+            </div>
+            <small class="text-muted d-block mt-1">{{user.email}}</small>
+          </div>
+
+          <!-- Edit Name Mode -->
+          <div ng-if="isEditingName" class="p-3 bg-light rounded-3 border">
+            <label class="form-label small fw-bold text-navy d-block text-start mb-1">Edit Display Name:</label>
+            <div class="input-group mb-2">
+              <input 
+                type="text" 
+                class="form-control form-control-sm" 
+                ng-model="editNameVal" 
+                placeholder="Enter full name"
+                ng-keyup="$event.keyCode === 13 && saveName()"
+                autofocus>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+              <button 
+                type="button" 
+                class="btn btn-sm btn-outline-secondary py-1 px-3" 
+                ng-click="cancelEditName()" 
+                ng-disabled="isSavingName">
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-sm btn-deep-navy py-1 px-3" 
+                ng-click="saveName()" 
+                ng-disabled="isSavingName || !editNameVal.trim()">
+                <span ng-if="isSavingName" class="spinner-border spinner-border-sm me-1"></span>
+                <i class="bi bi-check2 me-1" ng-if="!isSavingName"></i> Save
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==========================================
+             FEATURE 2: PROFILE PICTURE MANAGEMENT
+             ========================================== -->
+        <div class="border-top pt-3 text-start">
+          <h6 class="fw-bold text-navy mb-2">
+            <i class="bi bi-image me-1 text-gold"></i> Profile Picture
+          </h6>
+          <p class="text-muted small mb-3">Upload a professional JPG or PNG image (max 5MB).</p>
+
+          <!-- Hidden File Input -->
+          <input 
+            type="file" 
+            id="profilePicInput" 
+            class="d-none" 
+            accept="image/*" 
+            onchange="angular.element(this).scope().onAvatarSelected(this)">
+
+          <!-- Live Preview Notification -->
+          <div class="alert alert-info py-2 px-3 small d-flex align-items-center justify-content-between mb-3" ng-if="avatarPreview">
+            <div>
+              <i class="bi bi-eye-fill me-1"></i> <strong>New Picture Preview</strong>
+            </div>
+            <div class="d-flex gap-1">
+              <button class="btn btn-sm btn-success py-0 px-2" ng-click="saveAvatar()" ng-disabled="isUploadingAvatar">
+                <span ng-if="isUploadingAvatar" class="spinner-border spinner-border-sm"></span>
+                Save
+              </button>
+              <button class="btn btn-sm btn-light border py-0 px-2" ng-click="cancelAvatarPreview()">
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          <!-- Buttons for Picture Management -->
+          <div class="d-grid gap-2">
+            <button 
+              type="button" 
+              class="btn btn-outline-navy btn-sm py-2" 
+              ng-click="triggerFileInput()">
+              <i class="bi bi-cloud-arrow-up me-1"></i> Upload New Picture
+            </button>
+
+            <!-- Clearly Visible Remove Profile Picture Option -->
+            <button 
+              type="button" 
+              class="btn btn-outline-danger btn-sm py-2" 
+              ng-click="promptRemoveAvatar()"
+              ng-disabled="isDefaultAvatar() || isRemovingAvatar"
+              title="{{isDefaultAvatar() ? 'Already using default avatar' : 'Delete currently uploaded picture'}}">
+              <span ng-if="isRemovingAvatar" class="spinner-border spinner-border-sm me-1"></span>
+              <i class="bi bi-trash3 me-1" ng-if="!isRemovingAvatar"></i> Remove Profile Picture
+            </button>
+          </div>
+
+          <div class="text-muted text-center mt-2" style="font-size: 11px;">
+            <i class="bi bi-info-circle me-1"></i> Removing picture restores the default avatar.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Account Details & Security -->
+    <div class="col-lg-7 col-xl-8">
+      <!-- ==========================================
+           FEATURE 3: ADDITIONAL SETTINGS - ACCOUNT INFO
+           ========================================== -->
+      <div class="fh-card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+          <h5 class="fw-bold text-navy mb-0">
+            <i class="bi bi-person-lines-fill me-2 text-gold"></i> Personal &amp; Account Information
+          </h5>
+          <span class="badge bg-gold-light text-navy border border-gold small">General Details</span>
+        </div>
+
+        <form ng-submit="saveAccountDetails()">
+          <div class="row g-3 mb-3">
+            <!-- Email Address with validation -->
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-navy">Email Address *</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border"><i class="bi bi-envelope text-muted"></i></span>
+                <input 
+                  type="email" 
+                  class="form-control" 
+                  ng-model="accountForm.email" 
+                  required 
+                  placeholder="name@example.com">
+              </div>
+              <small class="text-muted" style="font-size: 11px;">Primary login and notification address.</small>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-navy">Phone Number</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border"><i class="bi bi-telephone text-muted"></i></span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  ng-model="accountForm.phone" 
+                  placeholder="+91 98765 43210">
+              </div>
+              <small class="text-muted" style="font-size: 11px;">Used for order delivery alerts.</small>
+            </div>
+
+            <!-- Location / City -->
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-navy">Location / City</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border"><i class="bi bi-geo-alt text-muted"></i></span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  ng-model="accountForm.location" 
+                  placeholder="e.g. Bangalore, India">
+              </div>
+            </div>
+
+            <!-- Role-Specific Fields: Freelancer -->
+            <div class="col-md-6" ng-if="user.role === 'freelancer'">
+              <label class="form-label small fw-semibold text-navy">Professional Title</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                ng-model="accountForm.title" 
+                placeholder="e.g. Senior Graphic Designer &amp; Illustrator">
+            </div>
+
+            <div class="col-md-6" ng-if="user.role === 'freelancer'">
+              <label class="form-label small fw-semibold text-navy">Hourly Rate (₹/hr)</label>
+              <input 
+                type="number" 
+                class="form-control" 
+                ng-model="accountForm.hourlyRate" 
+                min="100">
+            </div>
+
+            <div class="col-12" ng-if="user.role === 'freelancer'">
+              <label class="form-label small fw-semibold text-navy">Bio &amp; Professional Summary</label>
+              <textarea 
+                class="form-control" 
+                rows="3" 
+                ng-model="accountForm.bio" 
+                placeholder="Describe your background, expertise, and what sets you apart..."></textarea>
+            </div>
+
+            <!-- Role-Specific Fields: Client -->
+            <div class="col-md-6" ng-if="user.role === 'client'">
+              <label class="form-label small fw-semibold text-navy">Company / Agency Name</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                ng-model="accountForm.companyName" 
+                placeholder="e.g. Verma Media Pvt Ltd">
+            </div>
+
+            <div class="col-md-6" ng-if="user.role === 'client'">
+              <label class="form-label small fw-semibold text-navy">Website URL</label>
+              <input 
+                type="url" 
+                class="form-control" 
+                ng-model="accountForm.website" 
+                placeholder="https://example.com">
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-deep-navy px-4 py-2" ng-disabled="isSavingAccount">
+              <span ng-if="isSavingAccount" class="spinner-border spinner-border-sm me-1"></span>
+              <i class="bi bi-save me-1" ng-if="!isSavingAccount"></i> Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ==========================================
+           FEATURE 4: CHANGE PASSWORD
+           ========================================== -->
+      <div class="fh-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+          <h5 class="fw-bold text-navy mb-0">
+            <i class="bi bi-shield-lock me-2 text-gold"></i> Change Password
+          </h5>
+          <span class="badge bg-light text-navy border small">Security</span>
+        </div>
+
+        <form ng-submit="changePassword()">
+          <div class="row g-3 mb-3">
+            <!-- Current Password -->
+            <div class="col-md-12">
+              <label class="form-label small fw-semibold text-navy">Current Password *</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border"><i class="bi bi-key text-muted"></i></span>
+                <input 
+                  type="{{showPasswords.current ? 'text' : 'password'}}" 
+                  class="form-control" 
+                  ng-model="passwordForm.currentPassword" 
+                  required 
+                  placeholder="Enter current password">
+                <button 
+                  class="btn btn-outline-secondary" 
+                  type="button" 
+                  ng-click="togglePasswordVisibility('current')">
+                  <i class="bi" ng-class="{'bi-eye': !showPasswords.current, 'bi-eye-slash': showPasswords.current}"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- New Password -->
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-navy">New Password *</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border"><i class="bi bi-lock text-muted"></i></span>
+                <input 
+                  type="{{showPasswords.new ? 'text' : 'password'}}" 
+                  class="form-control" 
+                  ng-model="passwordForm.newPassword" 
+                  minlength="6" 
+                  required 
+                  placeholder="Minimum 6 characters">
+                <button 
+                  class="btn btn-outline-secondary" 
+                  type="button" 
+                  ng-click="togglePasswordVisibility('new')">
+                  <i class="bi" ng-class="{'bi-eye': !showPasswords.new, 'bi-eye-slash': showPasswords.new}"></i>
+                </button>
+              </div>
+              <small class="text-muted" style="font-size: 11px;">Must be at least 6 characters.</small>
+            </div>
+
+            <!-- Confirm New Password -->
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-navy">Confirm New Password *</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border"><i class="bi bi-lock-fill text-muted"></i></span>
+                <input 
+                  type="{{showPasswords.confirm ? 'text' : 'password'}}" 
+                  class="form-control" 
+                  ng-model="passwordForm.confirmPassword" 
+                  minlength="6" 
+                  required 
+                  placeholder="Re-enter new password">
+                <button 
+                  class="btn btn-outline-secondary" 
+                  type="button" 
+                  ng-click="togglePasswordVisibility('confirm')">
+                  <i class="bi" ng-class="{'bi-eye': !showPasswords.confirm, 'bi-eye-slash': showPasswords.confirm}"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end">
+            <button 
+              type="submit" 
+              class="btn btn-deep-navy px-4 py-2" 
+              ng-disabled="isChangingPassword || !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword">
+              <span ng-if="isChangingPassword" class="spinner-border spinner-border-sm me-1"></span>
+              <i class="bi bi-shield-check me-1" ng-if="!isChangingPassword"></i> Update Password
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL CONFIRMATION: REMOVE PROFILE PICTURE
+       ========================================== -->
+  <div class="modal fade show" tabindex="-1" style="display: block; background: rgba(23, 37, 84, 0.6);" ng-if="showRemoveConfirm">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+        <div class="modal-header border-bottom py-3 px-4 bg-light">
+          <h6 class="modal-title fw-bold text-danger mb-0">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> Remove Profile Picture?
+          </h6>
+          <button type="button" class="btn-close" ng-click="cancelRemoveAvatar()"></button>
+        </div>
+        <div class="modal-body p-4 text-center">
+          <div class="mb-3">
+            <img ng-src="{{user.avatar || '/assets/images/default-avatar.png'}}" class="fh-avatar-lg shadow-sm" alt="Current avatar" style="width: 80px; height: 80px;">
+          </div>
+          <h6 class="fw-bold text-navy mb-2">Delete currently uploaded picture?</h6>
+          <p class="text-muted small mb-0">
+            This action will remove your current profile picture from the servers and reset your avatar to the default FreelanceHub avatar.
+          </p>
+        </div>
+        <div class="modal-footer border-top py-2 px-4 bg-light d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-outline-secondary btn-sm px-3" ng-click="cancelRemoveAvatar()">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-danger btn-sm px-3" ng-click="executeRemoveAvatar()" ng-disabled="isRemovingAvatar">
+            <span ng-if="isRemovingAvatar" class="spinner-border spinner-border-sm me-1"></span>
+            <i class="bi bi-trash3 me-1" ng-if="!isRemovingAvatar"></i> Yes, Remove Picture
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

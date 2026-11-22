@@ -1,0 +1,245 @@
+<!-- ==========================================================================
+     SECTION 1: HERO LANDING SECTION
+     ========================================================================== -->
+<section class="fh-hero text-center">
+  <div class="container position-relative" style="z-index: 2;">
+    <!-- Small Badge -->
+    <div class="mb-3">
+      <span class="fh-badge-marketplace">
+        <i class="bi bi-patch-check-fill text-gold me-1"></i> MULTI-CATEGORY FREELANCING MARKETPLACE
+      </span>
+    </div>
+
+    <!-- Main Heading -->
+    <h1 class="fh-hero-title mb-3">
+      Find the <span class="text-gold">Right Talent</span>.<br>
+      Get Your <span class="text-gold">Work Done</span>.
+    </h1>
+
+    <!-- Description -->
+    <p class="fh-hero-desc mx-auto mb-4">
+      Connect with talented professionals across different industries. Discover skilled freelancers, explore services and bring your ideas to life.
+    </p>
+
+    <!-- Search Area -->
+    <div class="fh-search-container mx-auto mb-4" style="max-width: 860px;">
+      <div class="d-flex align-items-center flex-grow-1 ps-2">
+        <i class="bi bi-search text-muted fs-5 me-2"></i>
+        <input 
+          type="text" 
+          class="form-control fh-search-input" 
+          ng-model="searchQuery" 
+          placeholder="What service or talent are you looking for?"
+          ng-keyup="$event.keyCode === 13 && doSearch()"
+          aria-label="Search talent or service">
+      </div>
+      <div class="d-none d-md-block border-start h-50 mx-1"></div>
+      <select 
+        class="form-select fh-category-select d-none d-md-block" 
+        style="max-width: 220px;" 
+        ng-model="searchCategory"
+        aria-label="Select Category">
+        <option value="">All Categories</option>
+        <option ng-repeat="cat in heroCategories" value="{{cat}}">{{cat}}</option>
+      </select>
+      <div class="fh-search-type-group" role="group" aria-label="Search Type Selector">
+        <button 
+          type="button" 
+          class="fh-search-type-btn" 
+          ng-class="{'active': searchType === 'services'}" 
+          ng-click="searchType = 'services'">
+          Services
+        </button>
+        <button 
+          type="button" 
+          class="fh-search-type-btn" 
+          ng-class="{'active': searchType === 'freelancers'}" 
+          ng-click="searchType = 'freelancers'">
+          Freelancers
+        </button>
+      </div>
+      <button class="fh-btn-search px-4" ng-click="doSearch()" aria-label="Search Button">
+        <span class="d-none d-sm-inline">Search</span>
+        <i class="bi bi-arrow-right d-sm-none"></i>
+      </button>
+    </div>
+
+    <!-- Call to Action Buttons -->
+    <div class="d-flex flex-wrap justify-content-center gap-3">
+      <a href="#!/freelancers" class="btn-cta-explore">
+        <i class="bi bi-people me-2"></i>Explore Freelancers
+      </a>
+      <a href="#!/register" class="btn-cta-become" ng-if="!isLoggedIn">
+        <i class="bi bi-briefcase me-2"></i>Become a Freelancer
+      </a>
+      <a href="#!/post-project" class="btn-cta-become" ng-if="isLoggedIn && currentUser.role === 'client'">
+        <i class="bi bi-plus-circle me-2"></i>Post a Project
+      </a>
+      <a href="#!/freelancer-dashboard" class="btn-cta-become" ng-if="isLoggedIn && currentUser.role === 'freelancer'">
+        <i class="bi bi-speedometer2 me-2"></i>Freelancer Dashboard
+      </a>
+      <a href="#!/admin-dashboard" class="btn-cta-become" ng-if="isLoggedIn && currentUser.role === 'admin'">
+        <i class="bi bi-shield-lock me-2"></i>Admin Dashboard
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     SECTION 2: WHY CHOOSE FREELANCEHUB?
+     ========================================================================== -->
+<section class="fh-section-why">
+  <div class="container">
+    <div class="text-center mb-5" style="max-width: 680px; margin: 0 auto;">
+      <h2 class="display-6 fw-bold mb-2 text-navy">Why Choose FreelanceHub?</h2>
+      <p class="text-muted fs-6 mb-0">
+        Everything you need to connect, collaborate and complete projects with confidence.
+      </p>
+    </div>
+
+    <div class="row g-4">
+      <!-- Card 1: Multi-Skill Freelancers -->
+      <div class="col-md-6 col-lg-3">
+        <div class="fh-feature-card">
+          <div class="fh-feature-icon-wrap">
+            <i class="bi bi-people-fill"></i>
+          </div>
+          <h5>MULTI-SKILL FREELANCERS</h5>
+          <p>
+            Discover talented professionals from different industries and find the right expertise for your requirements.
+          </p>
+        </div>
+      </div>
+
+      <!-- Card 2: Simulated Escrow Protection -->
+      <div class="col-md-6 col-lg-3">
+        <div class="fh-feature-card">
+          <div class="fh-feature-icon-wrap">
+            <i class="bi bi-shield-check"></i>
+          </div>
+          <h5>SIMULATED ESCROW PROTECTION</h5>
+          <p>
+            Experience a payment-hold workflow designed to support transparent transactions and approval-based payment release.
+          </p>
+        </div>
+      </div>
+
+      <!-- Card 3: Smart Budget Estimator -->
+      <div class="col-md-6 col-lg-3">
+        <div class="fh-feature-card">
+          <div class="fh-feature-icon-wrap">
+            <i class="bi bi-calculator-fill"></i>
+          </div>
+          <h5>SMART BUDGET ESTIMATOR</h5>
+          <p>
+            Estimate project costs based on service categories, project requirements and expected delivery.
+          </p>
+        </div>
+      </div>
+
+      <!-- Card 4: Milestone Payments -->
+      <div class="col-md-6 col-lg-3">
+        <div class="fh-feature-card">
+          <div class="fh-feature-icon-wrap">
+            <i class="bi bi-flag-fill"></i>
+          </div>
+          <h5>MILESTONE PAYMENTS</h5>
+          <p>
+            Divide large projects into manageable stages and track payment progress throughout the project.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     SECTION 3: CUSTOMER STORIES
+     ========================================================================== -->
+<section class="fh-section-stories">
+  <div class="container">
+    <div class="text-center mb-5" style="max-width: 680px; margin: 0 auto;">
+      <h2 class="display-6 fw-bold mb-2 text-navy">Customer Stories</h2>
+      <p class="text-muted fs-6 mb-0">What Our Clients &amp; Freelancers Say</p>
+    </div>
+
+    <div class="row g-4">
+      <!-- Story 1: Client who hired a graphic designer -->
+      <div class="col-md-4">
+        <div class="fh-testimonial-card">
+          <div class="fh-stars">
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+          </div>
+          <p class="fh-testimonial-quote">
+            "FreelanceHub helped us find an outstanding graphic designer for our complete brand overhaul. The milestone workflow and simulated escrow release gave us total confidence throughout the delivery."
+          </p>
+          <div class="d-flex align-items-center gap-3 mt-auto pt-3 border-top">
+            <img src="/assets/images/client-1.jpg" class="fh-testimonial-avatar" alt="Neha Verma">
+            <div>
+              <div class="fh-testimonial-author">Neha Verma</div>
+              <div class="fh-testimonial-role">Brand Director, Verma Media</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Story 2: Freelancer who earned through photography or content writing -->
+      <div class="col-md-4">
+        <div class="fh-testimonial-card">
+          <div class="fh-stars">
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+          </div>
+          <p class="fh-testimonial-quote">
+            "As a professional photographer, getting discovered beyond traditional local circles was always tough. With FreelanceHub, I receive direct service orders with transparent escrow terms and prompt payouts."
+          </p>
+          <div class="d-flex align-items-center gap-3 mt-auto pt-3 border-top">
+            <img src="/assets/images/freelancer-2.jpg" class="fh-testimonial-avatar" alt="Kabir Mehta">
+            <div>
+              <div class="fh-testimonial-author">Kabir Mehta</div>
+              <div class="fh-testimonial-role">Commercial Photographer</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Story 3: Client who hired a tutor or another professional -->
+      <div class="col-md-4">
+        <div class="fh-testimonial-card">
+          <div class="fh-stars">
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+          </div>
+          <p class="fh-testimonial-quote">
+            "We engaged an expert corporate tutor for our technical team. The structured proposal bidding, milestones, and direct communication made training seamless and measurable."
+          </p>
+          <div class="d-flex align-items-center gap-3 mt-auto pt-3 border-top">
+            <img src="/assets/images/client-2.jpg" class="fh-testimonial-avatar" alt="Rajesh Singhania">
+            <div>
+              <div class="fh-testimonial-author">Rajesh Singhania</div>
+              <div class="fh-testimonial-role">Managing Director, Singhania Innovations</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Academic Demonstration Disclaimer -->
+    <div class="text-center mt-5">
+      <p class="text-muted small fst-italic mb-0">
+        <i class="bi bi-info-circle me-1 text-gold"></i>
+        Representative client experience for academic demonstration purposes.
+      </p>
+    </div>
+  </div>
+</section>

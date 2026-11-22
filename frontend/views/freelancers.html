@@ -1,0 +1,138 @@
+<div class="container py-4">
+  <!-- Header -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+      <h2 class="fw-bold mb-1">Find Top Professional Freelancers</h2>
+      <p class="text-muted small mb-0">Discover verified talent across 25 industries from developers to designers, tutors, and accountants.</p>
+    </div>
+    <a href="#!/budget-estimator" class="btn btn-outline-fh">
+      <i class="bi bi-calculator me-1"></i> Cost & Budget Estimator
+    </a>
+  </div>
+
+  <div class="row g-4">
+    <!-- Filter Sidebar -->
+    <div class="col-lg-3">
+      <div class="fh-card p-3 p-sm-4 sticky-top" style="top: 90px; z-index: 10;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-bold mb-0"><i class="bi bi-funnel-fill text-primary me-1"></i> Freelancer Filters</h6>
+          <button class="btn btn-link btn-sm text-decoration-none p-0" ng-click="resetFilters()">Reset All</button>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Search Name / Skill</label>
+          <input type="text" class="form-control form-control-sm" ng-model="filters.search" ng-change="applyFilters()" placeholder="Name, skill, or title...">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Category</label>
+          <select class="form-select form-select-sm" ng-model="filters.category" ng-change="applyFilters()">
+            <option value="All">All Categories</option>
+            <option ng-repeat="cat in categories" value="{{cat.name}}">{{cat.name}}</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Availability</label>
+          <select class="form-select form-select-sm" ng-model="filters.availability" ng-change="applyFilters()">
+            <option value="All">All Statuses</option>
+            <option value="Available">Available Now</option>
+            <option value="Busy">Busy</option>
+            <option value="Unavailable">Unavailable</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Hourly Rate (₹/hr)</label>
+          <div class="d-flex gap-2 align-items-center">
+            <input type="number" class="form-control form-control-sm" placeholder="Min" ng-model="filters.minRate" ng-change="applyFilters()">
+            <span class="text-muted">-</span>
+            <input type="number" class="form-control form-control-sm" placeholder="Max" ng-model="filters.maxRate" ng-change="applyFilters()">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Minimum Rating</label>
+          <select class="form-select form-select-sm" ng-model="filters.minRating" ng-change="applyFilters()">
+            <option value="">Any Rating</option>
+            <option value="4.8">4.8+ Stars</option>
+            <option value="4.5">4.5+ Stars</option>
+            <option value="4.0">4.0+ Stars</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Freelancers Grid -->
+    <div class="col-lg-9">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted small">Showing <strong>{{freelancers.length}}</strong> professional freelancers</span>
+      </div>
+
+      <div class="text-center py-5" ng-if="isLoading">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="text-muted small mt-2">Loading freelancers from database...</p>
+      </div>
+
+      <div class="fh-card p-5 text-center" ng-if="!isLoading && freelancers.length === 0">
+        <div class="stat-icon bg-light text-muted mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.6rem;">
+          <i class="bi bi-people"></i>
+        </div>
+        <h5 class="fw-bold">No Freelancers Match Your Filter</h5>
+        <p class="text-muted small mb-3">Try adjusting your filters or search keywords.</p>
+        <button class="btn btn-outline-fh btn-sm" ng-click="resetFilters()">Reset Filters</button>
+      </div>
+
+      <div class="row g-4" ng-if="!isLoading && freelancers.length > 0">
+        <div class="col-md-6" ng-repeat="f in freelancers">
+          <div class="fh-card fh-freelancer-card">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="d-flex align-items-center gap-3">
+                <img ng-src="{{f.user.avatar || '/assets/images/default-avatar.png'}}" alt="{{f.user.name}}" class="fh-avatar">
+                <div>
+                  <h6 class="fw-bold mb-0">
+                    <a href="#!/freelancers/{{f.user._id}}" class="text-dark">{{f.user.name}}</a>
+                    <span class="badge-verified" title="Verified Freelancer" ng-if="f.user.isVerified"><i class="bi bi-patch-check-fill"></i></span>
+                  </h6>
+                  <small class="text-muted d-block text-truncate" style="max-width: 170px;">{{f.title}}</small>
+                  <span class="availability-pill mt-1" ng-class="{
+                    'availability-available': f.availability === 'Available',
+                    'availability-busy': f.availability === 'Busy',
+                    'availability-unavailable': f.availability === 'Unavailable'
+                  }">
+                    <i class="bi bi-circle-fill" style="font-size: 6px;"></i> {{f.availability}}
+                  </span>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-light border rounded-circle" ng-click="toggleSave(f.user._id)" title="Bookmark Freelancer" ng-if="isLoggedIn && currentUser.role === 'client'">
+                <i class="bi" ng-class="{'bi-bookmark-fill text-primary': isFreelancerSaved(f.user._id), 'bi-bookmark': !isFreelancerSaved(f.user._id)}"></i>
+              </button>
+            </div>
+
+            <p class="text-muted small mb-3 text-truncate-2" style="height: 38px;">{{f.bio || 'Experienced multi-skilled freelancer providing top-tier professional services.'}}</p>
+
+            <div class="mb-3">
+              <span class="skill-tag" ng-repeat="sk in f.skills | limitTo: 4">{{sk}}</span>
+            </div>
+
+            <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+              <div>
+                <small class="text-muted d-block">Hourly Rate</small>
+                <span class="fw-bold text-dark fs-6">{{formatCurrency(f.hourlyRate)}}/hr</span>
+              </div>
+              <div class="text-end">
+                <span class="text-warning fw-bold"><i class="bi bi-star-fill"></i> {{f.rating}}</span>
+                <small class="text-muted">({{f.numReviews}} reviews)</small>
+              </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+              <a href="#!/freelancers/{{f.user._id}}" class="btn btn-outline-fh btn-sm flex-grow-1">View Full Profile</a>
+              <a href="#!/messages?contactId={{f.user._id}}" class="btn btn-light btn-sm border" title="Message"><i class="bi bi-chat-dots"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

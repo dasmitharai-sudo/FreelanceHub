@@ -1,0 +1,111 @@
+<div class="container py-4">
+  <!-- Header Banner -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+      <h2 class="fw-bold mb-1">Browse Client Projects</h2>
+      <p class="text-muted small mb-0">Apply with custom proposals, set your price bids, and collaborate in dedicated workspaces.</p>
+    </div>
+    <a href="#!/post-project" class="btn btn-primary-fh" ng-if="isLoggedIn && (currentUser.role === 'client' || currentUser.role === 'admin')">
+      <i class="bi bi-plus-circle me-1"></i> Post a New Project
+    </a>
+  </div>
+
+  <div class="row g-4">
+    <!-- Filter Sidebar -->
+    <div class="col-lg-3">
+      <div class="fh-card p-3 p-sm-4 sticky-top" style="top: 90px; z-index: 10;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-bold mb-0"><i class="bi bi-funnel-fill text-primary me-1"></i> Project Filters</h6>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Keyword</label>
+          <input type="text" class="form-control form-control-sm" ng-model="filters.search" ng-change="loadProjects()" placeholder="Project title or skill...">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Category</label>
+          <select class="form-select form-select-sm" ng-model="filters.category" ng-change="loadProjects()">
+            <option value="All">All Categories</option>
+            <option ng-repeat="cat in categories" value="{{cat.name}}">{{cat.name}}</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Payment Type</label>
+          <select class="form-select form-select-sm" ng-model="filters.paymentType" ng-change="loadProjects()">
+            <option value="All">All Types</option>
+            <option value="fixed">Fixed Price</option>
+            <option value="hourly">Hourly Rate</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Budget Range (₹)</label>
+          <div class="d-flex gap-2 align-items-center">
+            <input type="number" class="form-control form-control-sm" placeholder="Min" ng-model="filters.minBudget" ng-change="loadProjects()">
+            <span class="text-muted">-</span>
+            <input type="number" class="form-control form-control-sm" placeholder="Max" ng-model="filters.maxBudget" ng-change="loadProjects()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Projects List -->
+    <div class="col-lg-9">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted small">Showing <strong>{{projects.length}}</strong> open projects</span>
+      </div>
+
+      <div class="text-center py-5" ng-if="isLoading">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="text-muted small mt-2">Loading projects...</p>
+      </div>
+
+      <div class="fh-card p-5 text-center" ng-if="!isLoading && projects.length === 0">
+        <div class="stat-icon bg-light text-muted mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.6rem;">
+          <i class="bi bi-briefcase"></i>
+        </div>
+        <h5 class="fw-bold">No Projects Found</h5>
+        <p class="text-muted small mb-0">No active projects match your criteria at this moment.</p>
+      </div>
+
+      <div class="d-flex flex-column gap-3" ng-if="!isLoading && projects.length > 0">
+        <div class="fh-card p-4" ng-repeat="p in projects">
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+            <div>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-2">{{p.category}}</span>
+              <span class="badge" ng-class="{
+                'bg-success': p.status === 'Completed',
+                'bg-warning text-dark': p.status === 'In Progress' || p.status === 'Submitted',
+                'bg-info text-dark': p.status === 'Pending'
+              }">{{p.status}}</span>
+              <h5 class="fw-bold mt-2 mb-1">
+                <a href="#!/projects/{{p._id}}" class="text-dark hover-primary">{{p.title}}</a>
+              </h5>
+            </div>
+            <div class="text-end">
+              <span class="text-muted small d-block">{{p.paymentType === 'fixed' ? 'Fixed Price' : 'Hourly'}}</span>
+              <h4 class="fw-bold text-primary mb-0">{{formatCurrency(p.budget)}}</h4>
+            </div>
+          </div>
+
+          <p class="text-muted small mb-3 text-truncate-2" style="max-height: 42px;">{{p.description}}</p>
+
+          <div class="d-flex flex-wrap gap-1 mb-3">
+            <span class="skill-tag" ng-repeat="sk in p.skills">{{sk}}</span>
+          </div>
+
+          <div class="d-flex flex-wrap justify-content-between align-items-center pt-3 border-top text-muted small">
+            <div class="d-flex align-items-center gap-3">
+              <span><i class="bi bi-person"></i> Posted by <strong>{{p.client.name}}</strong></span>
+              <span><i class="bi bi-send"></i> <strong>{{p.proposalCount || 0}}</strong> proposals</span>
+              <span><i class="bi bi-calendar"></i> Deadline: {{p.deadline | date:'mediumDate'}}</span>
+            </div>
+            <a href="#!/projects/{{p._id}}" class="btn btn-outline-fh btn-sm">View & Submit Proposal</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

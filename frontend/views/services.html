@@ -1,0 +1,141 @@
+<div class="container py-4">
+  <!-- Header Banner -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+      <h2 class="fw-bold mb-1">Explore Marketplace Services</h2>
+      <p class="text-muted small mb-0">Browse and directly purchase transparent service packages from skilled freelancers.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="#!/compare-services" class="btn btn-outline-fh">
+        <i class="bi bi-arrow-left-right me-1"></i> Compare Services
+      </a>
+      <a href="#!/create-service" class="btn btn-primary-fh" ng-if="isLoggedIn && (currentUser.role === 'freelancer' || currentUser.role === 'admin')">
+        <i class="bi bi-plus-lg me-1"></i> Create Service Listing
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Filters Sidebar -->
+    <div class="col-lg-3">
+      <div class="fh-card p-3 p-sm-4 sticky-top" style="top: 90px; z-index: 10;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-bold mb-0"><i class="bi bi-funnel-fill text-primary me-1"></i> Filters</h6>
+          <button class="btn btn-link btn-sm text-decoration-none p-0" ng-click="resetFilters()">Reset All</button>
+        </div>
+
+        <!-- Search -->
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Keyword</label>
+          <input type="text" class="form-control form-control-sm" ng-model="filters.search" ng-change="applyFilters()" placeholder="Title or skill...">
+        </div>
+
+        <!-- Category -->
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Category</label>
+          <select class="form-select form-select-sm" ng-model="filters.category" ng-change="applyFilters()">
+            <option value="All">All Categories</option>
+            <option ng-repeat="cat in categories" value="{{cat.name}}">{{cat.name}}</option>
+          </select>
+        </div>
+
+        <!-- Budget Range -->
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Budget Range (₹)</label>
+          <div class="d-flex gap-2 align-items-center">
+            <input type="number" class="form-control form-control-sm" placeholder="Min" ng-model="filters.minPrice" ng-change="applyFilters()">
+            <span class="text-muted">-</span>
+            <input type="number" class="form-control form-control-sm" placeholder="Max" ng-model="filters.maxPrice" ng-change="applyFilters()">
+          </div>
+        </div>
+
+        <!-- Rating -->
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Minimum Rating</label>
+          <select class="form-select form-select-sm" ng-model="filters.minRating" ng-change="applyFilters()">
+            <option value="">Any Rating</option>
+            <option value="4.5">4.5 Stars & Above</option>
+            <option value="4.0">4.0 Stars & Above</option>
+            <option value="3.5">3.5 Stars & Above</option>
+          </select>
+        </div>
+
+        <!-- Delivery Time -->
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Max Delivery Time</label>
+          <select class="form-select form-select-sm" ng-model="filters.deliveryDays" ng-change="applyFilters()">
+            <option value="">Any Delivery Time</option>
+            <option value="1">Up to 24 Hours</option>
+            <option value="3">Up to 3 Days</option>
+            <option value="7">Up to 7 Days</option>
+            <option value="14">Up to 14 Days</option>
+          </select>
+        </div>
+
+        <!-- Sort By -->
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Sort By</label>
+          <select class="form-select form-select-sm" ng-model="filters.sort" ng-change="applyFilters()">
+            <option value="newest">Newest First</option>
+            <option value="rating">Highest Rated</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Services Grid -->
+    <div class="col-lg-9">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted small">Showing <strong>{{services.length}}</strong> services</span>
+      </div>
+
+      <!-- Loading State -->
+      <div class="text-center py-5" ng-if="isLoading">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="text-muted small mt-2">Loading services from database...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div class="fh-card p-5 text-center" ng-if="!isLoading && services.length === 0">
+        <div class="stat-icon bg-light text-muted mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.6rem;">
+          <i class="bi bi-search"></i>
+        </div>
+        <h5 class="fw-bold">No Services Found</h5>
+        <p class="text-muted small mb-3">Try clearing or adjusting your search filters to find more talent.</p>
+        <button class="btn btn-outline-fh btn-sm" ng-click="resetFilters()">Reset All Filters</button>
+      </div>
+
+      <!-- Grid -->
+      <div class="row g-4" ng-if="!isLoading && services.length > 0">
+        <div class="col-md-6 col-xl-4" ng-repeat="s in services">
+          <div class="fh-card h-100 d-flex flex-column">
+            <img ng-src="{{s.images[0] || '/assets/images/service-default.jpg'}}" alt="{{s.title}}" class="fh-service-img">
+            <div class="p-3 d-flex flex-column flex-grow-1">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <img ng-src="{{s.freelancer.avatar || '/assets/images/default-avatar.png'}}" class="fh-avatar-sm" alt="">
+                <small class="fw-semibold text-dark text-truncate">{{s.freelancer.name}}</small>
+                <span class="badge-verified ms-auto" ng-if="s.freelancer.isVerified"><i class="bi bi-patch-check-fill"></i></span>
+              </div>
+              <a href="#!/services/{{s._id}}" class="fw-bold text-dark text-truncate-2 mb-2 hover-primary" style="height: 44px;">
+                {{s.title}}
+              </a>
+              <div class="d-flex align-items-center text-muted small mb-3">
+                <i class="bi bi-star-fill text-warning me-1"></i>
+                <strong class="text-dark me-1">{{s.rating}}</strong> ({{s.numReviews}})
+                <span class="mx-2">•</span>
+                <i class="bi bi-clock me-1"></i> {{s.deliveryDays}}d
+              </div>
+              <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                <small class="text-muted">Starting at</small>
+                <span class="fw-bold text-primary fs-5">{{formatCurrency(s.packages.basic.price)}}</span>
+              </div>
+              <a href="#!/services/{{s._id}}" class="btn btn-outline-fh btn-sm w-100 mt-2">View Packages</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,320 @@
+<div class="container py-4" ng-if="!isLoading && project">
+  <!-- Workspace Header -->
+  <div class="fh-card p-4 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{project.category}}</span>
+          <span class="badge" ng-class="{
+            'bg-success': project.status === 'Completed',
+            'bg-warning text-dark': project.status === 'In Progress' || project.status === 'Submitted' || project.status === 'Revision Requested',
+            'bg-danger': project.status === 'Cancelled'
+          }">{{project.status}}</span>
+        </div>
+        <h3 class="fw-bold mb-0">{{project.title}}</h3>
+      </div>
+      <div class="text-end">
+        <small class="text-muted d-block">Agreed Escrow Amount</small>
+        <h3 class="fw-bold text-primary mb-0">{{formatCurrency(project.budget)}}</h3>
+      </div>
+    </div>
+
+    <!-- Status Stepper Bar -->
+    <div class="milestone-stepper mt-4 pt-3 border-top">
+      <div class="milestone-step">
+        <div class="step-circle" ng-class="{'completed': project.status !== 'Pending', 'active': project.status === 'Pending'}">1</div>
+        <small class="fw-semibold">Posted</small>
+      </div>
+      <div class="milestone-step">
+        <div class="step-circle" ng-class="{'completed': project.status === 'In Progress' || project.status === 'Submitted' || project.status === 'Completed', 'active': project.status === 'Accepted'}">2</div>
+        <small class="fw-semibold">Hired</small>
+      </div>
+      <div class="milestone-step">
+        <div class="step-circle" ng-class="{'completed': project.status === 'Submitted' || project.status === 'Completed', 'active': project.status === 'In Progress'}">3</div>
+        <small class="fw-semibold">In Progress</small>
+      </div>
+      <div class="milestone-step">
+        <div class="step-circle" ng-class="{'completed': project.status === 'Completed', 'active': project.status === 'Submitted' || project.status === 'Revision Requested'}">4</div>
+        <small class="fw-semibold">Submitted</small>
+      </div>
+      <div class="milestone-step">
+        <div class="step-circle" ng-class="{'completed': project.status === 'Completed', 'active': project.status === 'Completed'}">5</div>
+        <small class="fw-semibold">Completed</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workspace Tabs -->
+  <ul class="nav nav-pills mb-4 gap-2" role="tablist">
+    <li class="nav-item">
+      <button class="nav-link" ng-class="{'active': activeTab === 'overview'}" ng-click="activeTab = 'overview'"><i class="bi bi-grid-fill me-1"></i> Overview</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" ng-class="{'active': activeTab === 'milestones'}" ng-click="activeTab = 'milestones'"><i class="bi bi-flag-fill me-1"></i> Milestones ({{project.milestones.length || 0}})</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" ng-class="{'active': activeTab === 'submission'}" ng-click="activeTab = 'submission'"><i class="bi bi-box-seam-fill me-1"></i> Work Delivery</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" ng-class="{'active': activeTab === 'chat'}" ng-click="activeTab = 'chat'"><i class="bi bi-chat-dots-fill me-1"></i> Workspace Messages</button>
+    </li>
+    <li class="nav-item ms-auto">
+      <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#workspaceDisputeModal"><i class="bi bi-shield-exclamation me-1"></i> Raise Dispute</button>
+    </li>
+  </ul>
+
+  <!-- Tab 1: Overview -->
+  <div ng-if="activeTab === 'overview'">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="fh-card p-4 mb-4">
+          <h5 class="fw-bold mb-3 border-bottom pb-2">Project Brief</h5>
+          <p class="text-secondary lh-lg mb-3" style="white-space: pre-line;">{{project.description}}</p>
+          <h6 class="fw-bold text-dark mb-2">Required Skills:</h6>
+          <div>
+            <span class="skill-tag" ng-repeat="sk in project.skills">{{sk}}</span>
+          </div>
+        </div>
+
+        <!-- Latest Work Submission Preview -->
+        <div class="fh-card p-4 border-primary-subtle" ng-if="project.submission && project.submission.submittedAt">
+          <h5 class="fw-bold mb-2 text-primary"><i class="bi bi-cloud-arrow-down-fill me-1"></i> Latest Work Submission</h5>
+          <small class="text-muted d-block mb-3">Submitted on {{project.submission.submittedAt | date:'medium'}}</small>
+          <p class="text-dark bg-light p-3 rounded-3 border mb-3">{{project.submission.workDescription}}</p>
+          <div ng-if="project.submission.fileUrl" class="mb-3">
+            <a ng-href="{{project.submission.fileUrl}}" target="_blank" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-download me-1"></i> Download Deliverable ({{project.submission.fileName || 'Completed File'}})
+            </a>
+          </div>
+
+          <!-- Client Review Action Bar -->
+          <div class="p-3 bg-white rounded-3 border mt-3" ng-if="project.status === 'Submitted' && currentUser.role === 'client'">
+            <h6 class="fw-bold text-dark mb-2">Review Deliverable:</h6>
+            <div class="mb-2">
+              <textarea class="form-control form-control-sm" rows="2" ng-model="revisionNotes" placeholder="If requesting revisions, specify your feedback here..."></textarea>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-success btn-sm" ng-click="reviewSubmission('approve')"><i class="bi bi-check-lg me-1"></i> Approve & Release Payment</button>
+              <button class="btn btn-outline-warning btn-sm" ng-click="reviewSubmission('revision')"><i class="bi bi-arrow-repeat me-1"></i> Request Revision</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Parties Summary -->
+      <div class="col-lg-4">
+        <!-- Client Card -->
+        <div class="fh-card p-3 mb-3">
+          <small class="text-muted fw-bold d-block mb-2">PROJECT CLIENT</small>
+          <div class="d-flex align-items-center gap-2">
+            <img ng-src="{{project.client.avatar || '/assets/images/default-avatar.png'}}" class="fh-avatar-sm" alt="">
+            <div>
+              <strong class="text-dark d-block">{{project.client.name}}</strong>
+              <small class="text-muted">{{project.client.location || 'India'}}</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Freelancer Card -->
+        <div class="fh-card p-3 mb-3">
+          <small class="text-muted fw-bold d-block mb-2">ASSIGNED FREELANCER</small>
+          <div class="d-flex align-items-center gap-2">
+            <img ng-src="{{project.hiredFreelancer.avatar || '/assets/images/default-avatar.png'}}" class="fh-avatar-sm" alt="">
+            <div>
+              <strong class="text-dark d-block">
+                {{project.hiredFreelancer.name}}
+                <span class="badge-verified" ng-if="project.hiredFreelancer.isVerified"><i class="bi bi-patch-check-fill"></i></span>
+              </strong>
+              <small class="text-muted">{{project.hiredFreelancer.location || 'India'}}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2: Milestones -->
+  <div ng-if="activeTab === 'milestones'">
+    <div class="fh-card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Milestone Payment Stages</h5>
+        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#addMilestoneCollapse" ng-if="currentUser.role === 'client'">
+          <i class="bi bi-plus-lg me-1"></i> Add Milestone
+        </button>
+      </div>
+
+      <!-- Add Milestone Form -->
+      <div class="collapse mb-4" id="addMilestoneCollapse">
+        <div class="p-3 bg-light rounded-3 border">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+              <label class="form-label small fw-semibold text-muted">Title</label>
+              <input type="text" class="form-control form-control-sm" ng-model="newMilestone.title" placeholder="Stage title...">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold text-muted">Amount (₹)</label>
+              <input type="number" class="form-control form-control-sm" ng-model="newMilestone.amount" min="100">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small fw-semibold text-muted">Due Date</label>
+              <input type="date" class="form-control form-control-sm" ng-model="newMilestone.dueDate">
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-primary btn-sm w-100" ng-click="addMilestone()">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Milestone</th>
+              <th>Amount</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="m in project.milestones">
+              <td>{{$index + 1}}</td>
+              <td class="fw-semibold">{{m.title}}</td>
+              <td class="fw-bold text-primary">{{formatCurrency(m.amount)}}</td>
+              <td>{{m.dueDate ? (m.dueDate | date:'mediumDate') : 'Flexible'}}</td>
+              <td>
+                <span class="badge" ng-class="{
+                  'bg-success': m.status === 'Released' || m.status === 'Completed',
+                  'bg-warning text-dark': m.status === 'Funded',
+                  'bg-secondary': m.status === 'Pending'
+                }">{{m.status}}</span>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-success py-1 px-2" ng-if="currentUser.role === 'client' && m.status !== 'Released'" ng-click="releaseMilestone(m._id, m.title)">
+                  <i class="bi bi-check2-circle me-1"></i> Release Funds
+                </button>
+                <span class="text-success small fw-semibold" ng-if="m.status === 'Released'"><i class="bi bi-check-all"></i> Released</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 3: Work Delivery -->
+  <div ng-if="activeTab === 'submission'">
+    <div class="fh-card p-4">
+      <h5 class="fw-bold mb-3 border-bottom pb-2">Deliver Completed Work</h5>
+
+      <!-- Freelancer Submission Form -->
+      <div ng-if="currentUser._id === project.hiredFreelancer._id">
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Work Delivery Notes *</label>
+          <textarea class="form-control" rows="4" ng-model="submissionData.workDescription" placeholder="Explain the delivered files, how to access them, instructions, etc." required></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Attach Deliverable Archive / File (.zip, .pdf, images)</label>
+          <input type="file" id="workFile" class="form-control" accept=".zip,.rar,.pdf,.png,.jpg,.jpeg,.doc,.docx">
+        </div>
+        <button class="btn btn-primary-fh px-4" ng-click="submitWork()">
+          <i class="bi bi-cloud-arrow-up-fill me-1"></i> Submit Work to Client
+        </button>
+      </div>
+
+      <div ng-if="currentUser._id !== project.hiredFreelancer._id && (!project.submission || !project.submission.submittedAt)">
+        <p class="text-muted">The freelancer has not yet submitted final work. They can upload deliverable files directly through this tab.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 4: Workspace Chat -->
+  <div ng-if="activeTab === 'chat'">
+    <div class="chat-container">
+      <div class="chat-messages" id="workspaceChatMsgs">
+        <div class="text-center text-muted small py-3" ng-if="messages.length === 0">
+          No messages yet. Send a message to start communicating!
+        </div>
+        <div ng-repeat="msg in messages" class="chat-bubble" ng-class="{'chat-bubble-sent': msg.sender._id === currentUser._id, 'chat-bubble-received': msg.sender._id !== currentUser._id}">
+          <div class="small fw-bold mb-1" ng-if="msg.sender._id !== currentUser._id">{{msg.sender.name}}</div>
+          <div>{{msg.text}}</div>
+          <div ng-if="msg.attachmentUrl" class="mt-2 pt-1 border-top border-white-50">
+            <a ng-href="{{msg.attachmentUrl}}" target="_blank" class="text-decoration-underline text-white small">
+              <i class="bi bi-paperclip"></i> {{msg.attachmentName || 'Attachment'}}
+            </a>
+          </div>
+          <div class="text-end" style="font-size: 10px; opacity: 0.75;">{{msg.createdAt | date:'shortTime'}}</div>
+        </div>
+      </div>
+      <div class="p-3 bg-white border-top">
+        <form ng-submit="sendMessage()" class="d-flex gap-2">
+          <input type="file" id="chatAttachment" class="d-none">
+          <button type="button" class="btn btn-light border" onclick="document.getElementById('chatAttachment').click()" title="Attach file">
+            <i class="bi bi-paperclip"></i>
+          </button>
+          <input type="text" class="form-control" placeholder="Type a message to collaborator..." ng-model="chatInput">
+          <button type="submit" class="btn btn-primary-fh px-4"><i class="bi bi-send-fill"></i></button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="workspaceReviewModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Leave a Review</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3 text-center">
+          <label class="form-label small fw-semibold text-muted d-block">Rating (1 to 5 Stars)</label>
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm" ng-repeat="star in [1,2,3,4,5]" ng-class="{'btn-warning text-white': reviewData.rating >= star, 'btn-light border': reviewData.rating < star}" ng-click="reviewData.rating = star">
+              <i class="bi bi-star-fill"></i> {{star}}
+            </button>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Feedback Comments *</label>
+          <textarea class="form-control" rows="4" ng-model="reviewData.comment" placeholder="Describe your experience collaborating on this project..." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Skip</button>
+        <button type="button" class="btn btn-primary-fh" ng-click="submitReview()">Submit Review</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dispute Modal -->
+<div class="modal fade" id="workspaceDisputeModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold text-danger"><i class="bi bi-shield-exclamation me-1"></i> Report a Problem / Dispute</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small">Our administration team will review all correspondence, submissions, and mediate fairly.</p>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Dispute Reason *</label>
+          <input type="text" class="form-control" ng-model="disputeData.reason" placeholder="e.g. Incomplete deliverable / unresponsive collaborator" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Detailed Explanation *</label>
+          <textarea class="form-control" rows="4" ng-model="disputeData.description" placeholder="Explain the issue in detail..." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" ng-click="submitDispute()">Submit Dispute Ticket</button>
+      </div>
+    </div>
+  </div>
+</div>

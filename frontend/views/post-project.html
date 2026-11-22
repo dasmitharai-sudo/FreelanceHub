@@ -1,0 +1,112 @@
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="d-flex align-items-center gap-2 mb-4">
+        <a href="#!/projects" class="btn btn-sm btn-light border"><i class="bi bi-arrow-left"></i></a>
+        <div>
+          <h2 class="fw-bold mb-0">Post a New Project</h2>
+          <p class="text-muted small mb-0">Receive competitive proposals from top-rated professionals.</p>
+        </div>
+      </div>
+
+      <div class="fh-card p-4 p-sm-5">
+        <form ng-submit="postProject()">
+          <!-- Project Info -->
+          <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">1. Project Specifications</h5>
+          <div class="row g-3 mb-4">
+            <div class="col-12">
+              <label class="form-label small fw-semibold text-muted">Project Title *</label>
+              <input type="text" class="form-control" ng-model="newProject.title" placeholder="e.g. Build an eCommerce Platform / Brand Identity Design" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-muted">Category *</label>
+              <select class="form-select" ng-model="newProject.category" required>
+                <option value="">Select Category</option>
+                <option ng-repeat="cat in categories" value="{{cat.name}}">{{cat.name}}</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-muted">Payment Type *</label>
+              <select class="form-select" ng-model="newProject.paymentType" required>
+                <option value="fixed">Fixed Price</option>
+                <option value="hourly">Hourly Rate</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-muted">Estimated Budget (₹) *</label>
+              <input type="number" class="form-control" ng-model="newProject.budget" min="500" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-muted">Target Deadline *</label>
+              <input type="date" class="form-control" ng-model="newProject.deadline">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold text-muted">Required Skills (Comma separated) *</label>
+              <input type="text" class="form-control" ng-model="newProject.skills" placeholder="e.g. Node.js, AngularJS, MongoDB, UI/UX" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold text-muted">Detailed Project Description *</label>
+              <textarea class="form-control" rows="5" ng-model="newProject.description" placeholder="Explain your project goals, deliverables, specific requirements, and expectations..." required></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold text-muted">Reference Documents / Brief Files</label>
+              <input type="file" id="projectFiles" class="form-control" multiple accept=".pdf,.doc,.docx,.zip,.png,.jpg">
+            </div>
+          </div>
+
+          <!-- Milestones Builder (Unique Feature) -->
+          <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">2. Project Milestones (Optional)</h5>
+          <p class="text-muted small mb-3">Divide your project budget into structured delivery stages.</p>
+
+          <div class="p-3 bg-light rounded-3 border mb-3">
+            <div class="row g-2 align-items-end">
+              <div class="col-md-7">
+                <label class="form-label small fw-semibold text-muted">Milestone Title</label>
+                <input type="text" class="form-control form-control-sm" ng-model="milestoneInput.title" placeholder="e.g. Milestone 1: UI Wireframes & Mockups">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted">Amount (₹)</label>
+                <input type="number" class="form-control form-control-sm" ng-model="milestoneInput.amount" min="100">
+              </div>
+              <div class="col-md-2">
+                <button type="button" class="btn btn-outline-primary btn-sm w-100" ng-click="addMilestoneField()">
+                  <i class="bi bi-plus"></i> Add
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive mb-4" ng-if="newProject.milestones.length > 0">
+            <table class="table table-sm table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Milestone Title</th>
+                  <th>Amount</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="m in newProject.milestones">
+                  <td>{{$index + 1}}</td>
+                  <td>{{m.title}}</td>
+                  <td class="fw-bold">{{formatCurrency(m.amount)}}</td>
+                  <td>
+                    <button type="button" class="btn btn-sm btn-outline-danger py-0" ng-click="removeMilestoneField($index)"><i class="bi bi-trash"></i></button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="text-end">
+            <button type="submit" class="btn btn-primary-fh px-4 py-2" ng-disabled="isSubmitting">
+              <span ng-if="!isSubmitting"><i class="bi bi-send me-1"></i> Post Project for Bidding</span>
+              <span ng-if="isSubmitting"><span class="spinner-border spinner-border-sm me-2"></span>Posting...</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,175 @@
+<div class="container py-4" ng-if="!isLoading && order">
+  <div class="row g-4">
+    <!-- Left Column: Order Information & Deliveries -->
+    <div class="col-lg-8">
+      <div class="fh-card p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+          <div>
+            <span class="badge bg-secondary mb-1">ORDER #{{order.orderNumber}}</span>
+            <span class="badge" ng-class="{
+              'bg-success': order.status === 'Completed',
+              'bg-warning text-dark': order.status === 'In Progress' || order.status === 'Submitted' || order.status === 'Revision Requested',
+              'bg-danger': order.status === 'Cancelled'
+            }">{{order.status}}</span>
+            <h3 class="fw-bold mt-2 mb-1">{{order.service.title}}</h3>
+            <span class="text-muted small">Package: <strong class="text-uppercase">{{order.packageType}}</strong> • Placed on {{order.createdAt | date:'mediumDate'}}</span>
+          </div>
+          <div class="text-end">
+            <small class="text-muted d-block">Order Total</small>
+            <h2 class="fw-bold text-primary mb-0">{{formatCurrency(order.amount)}}</h2>
+            <span class="badge bg-success-subtle text-success border border-success-subtle small"><i class="bi bi-shield-check"></i> Escrow Secured</span>
+          </div>
+        </div>
+
+        <div class="p-3 bg-light rounded-3 border mb-3">
+          <strong class="d-block small text-dark mb-1">Client Order Requirements:</strong>
+          <p class="text-muted small mb-0">{{order.requirements || 'Standard service scope requirements.'}}</p>
+        </div>
+
+        <!-- Revision Notice if requested -->
+        <div class="alert alert-warning" ng-if="order.status === 'Revision Requested'">
+          <h6 class="fw-bold mb-1"><i class="bi bi-arrow-repeat me-1"></i> Revision Requested by Client</h6>
+          <p class="small mb-0">{{order.revisionNotes}}</p>
+        </div>
+      </div>
+
+      <!-- Work Delivery Section -->
+      <div class="fh-card p-4 mb-4">
+        <h5 class="fw-bold mb-3 border-bottom pb-2">Work Delivery & Review</h5>
+
+        <!-- Delivered Work Preview -->
+        <div class="p-3 bg-light rounded-3 border mb-3" ng-if="order.deliveryWork && order.deliveryWork.submittedAt">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <strong class="text-dark"><i class="bi bi-check-circle-fill text-success me-1"></i> Work Delivered by Freelancer</strong>
+            <small class="text-muted">{{order.deliveryWork.submittedAt | date:'medium'}}</small>
+          </div>
+          <p class="text-secondary small mb-3">{{order.deliveryWork.message}}</p>
+
+          <div ng-if="order.deliveryWork.fileUrl" class="mb-3">
+            <a ng-href="{{order.deliveryWork.fileUrl}}" target="_blank" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-download me-1"></i> Download Deliverable ({{order.deliveryWork.fileName || 'Archive'}})
+            </a>
+          </div>
+
+          <!-- Client Review Bar -->
+          <div class="pt-3 border-top" ng-if="order.status === 'Submitted' && currentUser.role === 'client'">
+            <h6 class="fw-bold text-dark mb-2">Review Deliverable:</h6>
+            <div class="mb-3">
+              <textarea class="form-control form-control-sm" rows="2" ng-model="revisionNotes" placeholder="If changes are required, specify revision notes here..."></textarea>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-success" ng-click="approveOrder()"><i class="bi bi-check-lg me-1"></i> Approve & Release Payment</button>
+              <button class="btn btn-outline-warning" ng-click="requestRevision()"><i class="bi bi-arrow-repeat me-1"></i> Request Revision</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Freelancer Delivery Submission Form -->
+        <div ng-if="order.freelancer._id === currentUser._id && (order.status === 'In Progress' || order.status === 'Revision Requested')">
+          <h6 class="fw-bold text-dark mb-2">Upload Final Delivery Work:</h6>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-muted">Delivery Message *</label>
+            <textarea class="form-control" rows="3" ng-model="deliveryData.message" placeholder="Describe the delivered files, instructions, and results..." required></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-muted">Attach Completed Deliverable File</label>
+            <input type="file" id="orderDeliveryFile" class="form-control" accept=".zip,.rar,.pdf,.png,.jpg,.jpeg,.doc,.docx">
+          </div>
+          <button class="btn btn-primary-fh px-4" ng-click="deliverOrder()">
+            <i class="bi bi-cloud-arrow-up-fill me-1"></i> Deliver Completed Work
+          </button>
+        </div>
+
+        <div ng-if="order.status === 'Completed'" class="alert alert-success mb-0">
+          <i class="bi bi-check-circle-fill me-1"></i> Order marked as completed! Payment has been released to the freelancer's wallet.
+          <button class="btn btn-sm btn-outline-success ms-2" data-bs-toggle="modal" data-bs-target="#orderReviewModal">Leave Review</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Parties & Details -->
+    <div class="col-lg-4">
+      <div class="fh-card p-4 mb-3">
+        <h6 class="fw-bold mb-3 border-bottom pb-2">Order Parties</h6>
+        <div class="mb-3">
+          <small class="text-muted d-block">CLIENT</small>
+          <strong class="text-dark">{{order.client.name}}</strong>
+          <small class="text-muted d-block">{{order.client.location || 'India'}}</small>
+        </div>
+        <div class="mb-3">
+          <small class="text-muted d-block">FREELANCER</small>
+          <strong class="text-dark">
+            {{order.freelancer.name}}
+            <span class="badge-verified" ng-if="order.freelancer.isVerified"><i class="bi bi-patch-check-fill"></i></span>
+          </strong>
+          <small class="text-muted d-block">{{order.freelancer.location || 'India'}}</small>
+        </div>
+        <a href="#!/messages?contactId={{order.client._id === currentUser._id ? order.freelancer._id : order.client._id}}" class="btn btn-outline-fh btn-sm w-100">
+          <i class="bi bi-chat-dots me-1"></i> Message Collaborator
+        </a>
+      </div>
+
+      <div class="fh-card p-4">
+        <button class="btn btn-outline-danger btn-sm w-100" data-bs-toggle="modal" data-bs-target="#orderDisputeModal">
+          <i class="bi bi-shield-exclamation me-1"></i> Raise Dispute
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Review Modal -->
+<div class="modal fade" id="orderReviewModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Leave a Review</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3 text-center">
+          <label class="form-label small fw-semibold text-muted d-block">Rating</label>
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm" ng-repeat="star in [1,2,3,4,5]" ng-class="{'btn-warning text-white': reviewData.rating >= star, 'btn-light border': reviewData.rating < star}" ng-click="reviewData.rating = star">
+              <i class="bi bi-star-fill"></i> {{star}}
+            </button>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Feedback Comments *</label>
+          <textarea class="form-control" rows="4" ng-model="reviewData.comment" placeholder="Describe the quality of work and communication..." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary-fh" ng-click="submitReview()">Submit Review</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Dispute Modal -->
+<div class="modal fade" id="orderDisputeModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold text-danger"><i class="bi bi-shield-exclamation me-1"></i> Raise an Order Dispute</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Reason *</label>
+          <input type="text" class="form-control" ng-model="disputeData.reason" placeholder="e.g. Substandard work / missed deadline" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-muted">Detailed Explanation *</label>
+          <textarea class="form-control" rows="4" ng-model="disputeData.description" placeholder="Explain the dispute details clearly..." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" ng-click="submitDispute()">Submit Dispute</button>
+      </div>
+    </div>
+  </div>
+</div>
